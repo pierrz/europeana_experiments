@@ -15,7 +15,6 @@ echo "###        STATS SCRIPT        ###"
 echo "__________________________________"
 echo "__________________________________"
 
-echo "$width"
 
 # TIMESTAMP FUNCTIONS
 timestamp() {
