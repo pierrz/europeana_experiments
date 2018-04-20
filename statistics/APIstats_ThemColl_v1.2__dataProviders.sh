@@ -26,10 +26,12 @@ DATE=$(timestamp)
 # QUERY PARAMETERS
 
 # Output directory
-dirOutput="output/"
+dirOutput="output/migration/dataProviders/"
 
 # Thematic Collection query fetched from separate txt file
-query_main=$(cat themes/query_migration.txt)
+queryTC_value=$(cat themes/query_migration.txt)
+queryTC_param="&qf="
+queryTC_main="$queryTC_param$queryTC_value"
 
 # API key
 apiKey=$(cat API_key.txt)
@@ -46,8 +48,12 @@ query_type="%22%20AND%20TYPE:"
 
 # Aggregated facets
 facet_rights="%22&reusability="
+facet_provider="%22&profile=facets&facet=PROVIDER&f.PROVIDER.facet.limit=300"
 
 # Fixed values
+# Providers
+providers_pattern="_providers"
+providers_pattern_all="_providers_all"
 # Licences
 rights_pattern="_rights_"
 rights_open="open"
@@ -73,21 +79,33 @@ do
 
   # Current data provider
   dataProviderLabel=$line
+
+   # PROVIDER ALL queries
+  query_facet_provider_all="$query_baseUrl$query_dataProv$dataProviderLabel$facet_provider$query_apikey"
+  # PROVIDER ALL files
+  file_facet_provider_all="$dirOutput$i$providers_pattern_all.$json_ext"
+
+  # PROVIDER queries
+  query_facet_provider="$query_baseUrl$queryTC_main$query_dataProv$dataProviderLabel$facet_provider$query_apikey"
+  # PROVIDER files
+  file_facet_provider="$dirOutput$i$providers_pattern.$json_ext"
+
+
   
   # RIGHTS queries
-  facet_rights_open="$query_baseUrl$query_main$query_dataProv$dataProviderLabel$facet_rights$rights_open$query_apikey"
-  facet_rights_restricted="$query_baseUrl$query_main$query_dataProv$dataProviderLabel$facet_rights$rights_restricted$query_apikey"
-  facet_rights_permission="$query_baseUrl$query_main$query_dataProv$dataProviderLabel$facet_rights$rights_permission$query_apikey"
+  facet_rights_open="$query_baseUrl$queryTC_main$query_dataProv$dataProviderLabel$facet_rights$rights_open$query_apikey"
+  facet_rights_restricted="$query_baseUrl$queryTC_main$query_dataProv$dataProviderLabel$facet_rights$rights_restricted$query_apikey"
+  facet_rights_permission="$query_baseUrl$queryTC_main$query_dataProv$dataProviderLabel$facet_rights$rights_permission$query_apikey"
   # RIGHTS files
   file_rights_open="$dirOutput$i$rights_pattern$rights_open.$json_ext"
   file_rights_restricted="$dirOutput$i$rights_pattern$rights_restricted.$json_ext"
   file_rights_permission="$dirOutput$i$rights_pattern$rights_permission.$json_ext"
   
   # TYPES queries
-  query_type_text="$query_baseUrl$query_main$query_dataProv$dataProviderLabel$query_type$type_TEXT$query_apikey"
-  query_type_image="$query_baseUrl$query_main$query_dataProv$dataProviderLabel$query_type$type_IMAGE$query_apikey"
-  query_type_video="$query_baseUrl$query_main$query_dataProv$dataProviderLabel$query_type$type_VIDEO$query_apikey"
-  query_type_sound="$query_baseUrl$query_main$query_dataProv$dataProviderLabel$query_type$type_SOUND$query_apikey"
+  query_type_text="$query_baseUrl$queryTC_main$query_dataProv$dataProviderLabel$query_type$type_TEXT$query_apikey"
+  query_type_image="$query_baseUrl$queryTC_main$query_dataProv$dataProviderLabel$query_type$type_IMAGE$query_apikey"
+  query_type_video="$query_baseUrl$queryTC_main$query_dataProv$dataProviderLabel$query_type$type_VIDEO$query_apikey"
+  query_type_sound="$query_baseUrl$queryTC_main$query_dataProv$dataProviderLabel$query_type$type_SOUND$query_apikey"
   query_type_3D="$query_baseUrl$query_main$query_dataProv$dataProviderLabel$query_type$type_3D$query_apikey"
   # TYPES files
   file_type_text="$dirOutput$i$type_pattern$type_TEXT.$json_ext"
@@ -99,6 +117,15 @@ do
   # SCRIPT
   echo "++++++++++++++++++++++++++++++++++++++++++"
   echo "$dataProviderLabel"
+  echo ""
+
+  # Aggregator
+  echo "______"
+  echo "Aggregator"
+  echo " |---> ALL"
+  wget -O "$file_facet_provider_all" "$query_facet_provider_all"
+  echo " |---> INSIDE THEMATIC COLLECTION"
+  wget -O "$file_facet_provider" "$query_facet_provider"
   echo ""
 
   # Rights
@@ -130,15 +157,14 @@ do
   i=$(( i + 1 ))
 
 # INPUT .txt file (list of data providers, with /!\ last line being empty /!\ )
-done < "input/list_providers.txt"
-# done < "input/list_providers.txt"
+done < "input/migration_dataProviders.txt"
 
 # ZIPPING full output
 echo "+++++++++++++++++"
 echo "Zipping JSON results"
 echo ""
-cd output
-zip "../zips/stats_migration_rights_$DATE.zip" *.json
-cd ..
+cd output/migration/dataProviders
+zip "../../../zips/stats_migration_dataProviders_$DATE.zip" *.json
+cd ../../..
 
 exit 0;
